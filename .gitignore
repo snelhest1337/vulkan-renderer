@@ -1,0 +1,5 @@
+obj/*
+!obj/.keepme
+shaders/*.spv
+renderer
+.vscode
