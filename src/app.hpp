@@ -1,5 +1,6 @@
 #pragma once
 
+#include "window.hpp"
 #include "platform.hpp"
 
 
@@ -11,6 +12,10 @@ class VulkanApp {
         void mainLoop();
         /* Responsible for setting up a suitable VkInstance */
         std::string name;
-        Platform platform;
 
+        /* NOTE! Order is important! We rely on destructors for cleanup */
+
+        Platform platform;
+        /* Wraps a glfwWindow */
+        Window window;
 };

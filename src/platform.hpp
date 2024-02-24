@@ -1,10 +1,12 @@
 #pragma once
+/* TODO: this should not have a glfw dependency */
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <vector>
 
 #include "common.hpp"
 
+/* TODO: Required extensions in the platform arguments */
 struct PlatformArgs {
     std::string name;
     bool useValidationLayers;
