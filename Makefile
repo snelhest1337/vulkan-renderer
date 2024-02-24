@@ -1,34 +1,35 @@
 LIBRARY_DIR = /home/snelhest/libraries
-
+CC = g++-13
 LIBS = tinyobj stb_image
 INCS = $(addprefix -I$(LIBRARY_DIR)/,$(patsubst %,%,$(LIBS)))
 SRCDIR = src
 OBJDIR = obj
-TARGETS = main
+TARGETS = main app platform
 
 OBJS = $(addprefix $(OBJDIR)/,$(patsubst %,%.o,$(TARGETS)))
 
-CFLAGS = -std=c++17 -O3 $(INCS)
+CFLAGS = -std=c++20 -O3 $(INCS)
 LDFLAGS = -lglfw -lvulkan -ldl -lpthread -lX11 -lXxf86vm -lXrandr -lXi
 APP = renderer
-SUBDIRS = shaders 
+SUBDIRS = shaders
 
 all: $(SUBDIRS) $(APP)
 
-$(SUBDIRS): 
+$(SUBDIRS):
 	$(MAKE) -C $@
 
 $(APP): $(OBJS)
-	g++ $(OBJS) -o $(APP) $(LDFLAGS)
+	$(CC) $(OBJS) -o $(APP) $(LDFLAGS)
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.cpp 
-	g++ $(CFLAGS) $< -c -o $@ $(LDFLAGS)
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
+	$(CC) $(CFLAGS) $< -c -o $@ $(LDFLAGS)
 
-.PHONY: test clean all $(SUBDIRS) 
+.PHONY: test clean all $(SUBDIRS)
 
 test: $(APP)
 	./$(APP)
 
 clean:
 	rm -f $(APP)
+	rm -f $(OBJDIR)/*
 	make -C shaders clean
