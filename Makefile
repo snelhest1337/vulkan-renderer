@@ -8,7 +8,8 @@ TARGETS = main app platform
 
 OBJS = $(addprefix $(OBJDIR)/,$(patsubst %,%.o,$(TARGETS)))
 
-CFLAGS = -std=c++20 -O3 $(INCS)
+# TODO: add release/debug build modes
+CFLAGS = -std=c++20 -O0 -g $(INCS)
 LDFLAGS = -lglfw -lvulkan -ldl -lpthread -lX11 -lXxf86vm -lXrandr -lXi
 APP = renderer
 SUBDIRS = shaders
