@@ -92,12 +92,23 @@ void SwapChain::createSwapChain() {
         swapChainExtent = extent;
 }
 
+void SwapChain::createImageViews() {
+    swapChainImageViews.resize(swapChainImages.size());
+    for (size_t i = 0; i < swapChainImages.size(); i++) {
+        swapChainImageViews[i] = device->createImageView(swapChainImages[i], swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+    }
+}
+
 void SwapChain::init(const SwapChainArgs &args) {
     device = args.device;
     window = args.window;
     createSwapChain();
+    createImageViews();
 }
 
 void SwapChain::destroy() {
+    for (auto imageView : swapChainImageViews) {
+        vkDestroyImageView(device->get(), imageView, nullptr);
+    }
     vkDestroySwapchainKHR(device->get(), swapChain, nullptr);
 }

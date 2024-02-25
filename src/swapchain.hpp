@@ -20,6 +20,7 @@ class SwapChain {
         void destroy();
     private:
         void createSwapChain();
+        void createImageViews();
         VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats);
         VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
         VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
@@ -29,4 +30,6 @@ class SwapChain {
         std::vector<VkImage> swapChainImages;
         VkFormat swapChainImageFormat;
         VkExtent2D swapChainExtent;
+        /* Should the swapchain contain the image view? Not sure */
+        std::vector<VkImageView> swapChainImageViews;
 };

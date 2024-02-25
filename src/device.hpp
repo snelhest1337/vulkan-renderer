@@ -40,6 +40,8 @@ class Device {
         SwapChainSupportDetails getSCDetails();
         QueueFamilyIndices getQFIndices();
         VkSurfaceKHR getSurface();
+        /* Might need to be moved later. Caller responsible for destruction */
+        VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
         /* Will be needed by allocator */
         // uint32_t getMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
