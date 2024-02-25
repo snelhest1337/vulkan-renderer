@@ -37,6 +37,9 @@ class Device {
         void init(const DeviceArgs &args);
         void destroy();
         VkDevice get();
+        SwapChainSupportDetails getSCDetails();
+        QueueFamilyIndices getQFIndices();
+        VkSurfaceKHR getSurface();
         /* Will be needed by allocator */
         // uint32_t getMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
@@ -47,6 +50,8 @@ class Device {
         bool isDeviceSuitable(VkPhysicalDevice device);
         SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
         QueueFamilyIndices qIndices;
+        SwapChainSupportDetails scDetails;
+
         VkPhysicalDevice physicalDevice;
         VkDevice device;
         VkQueue graphicsQueue;

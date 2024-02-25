@@ -16,6 +16,7 @@ class Window {
         void destroy();
         bool shouldClose();
         void pollEvents();
+        void getSize(int &width, int &height);
         VkSurfaceKHR createSurface(VkInstance instance);
     private:
         unsigned width;

@@ -41,3 +41,8 @@ void Window::destroy() {
     glfwDestroyWindow(window);
     glfwTerminate();
 }
+
+
+void Window::getSize(int &width, int &height) {
+    glfwGetFramebufferSize(window, &width, &height);
+}

@@ -22,6 +22,18 @@ static bool checkDeviceExtensionSupport(VkPhysicalDevice device) {
     return requiredExtensions.empty();
 }
 
+SwapChainSupportDetails Device::getSCDetails() {
+    return scDetails;
+}
+
+QueueFamilyIndices Device::getQFIndices() {
+    return qIndices;
+}
+
+VkSurfaceKHR Device::getSurface() {
+    return surface;
+}
+
 SwapChainSupportDetails Device::querySwapChainSupport(VkPhysicalDevice device) {
     SwapChainSupportDetails details;
     uint32_t formatCount;
@@ -92,6 +104,7 @@ void Device::init(const DeviceArgs &args) {
     selectPhysicalDevice(args.instance);
     /* Store indicies for the device that was actually selected */
     qIndices = getQueueFamilyIndices(physicalDevice);
+    scDetails = querySwapChainSupport(physicalDevice);
     createLogicalDevice();
 }
 

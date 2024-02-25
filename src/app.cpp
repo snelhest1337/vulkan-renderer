@@ -31,7 +31,6 @@ void VulkanApp::mainLoop() {
     while (!window->shouldClose()) {
         /* Just a wrapper for glfwPollEvents for now */
         window->pollEvents();
-        break;
     }
     teardown();
 }

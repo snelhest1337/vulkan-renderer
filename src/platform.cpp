@@ -42,11 +42,15 @@ void Platform::init(const PlatformArgs &args) {
     createInstance();
     surface = window->createSurface(instance);
     setupDebugMessenger();
-    device.init({.instance = instance, .surface = surface, .useValidationLayers = useValidationLayers});
+    device = std::make_shared<Device>();
+    device->init({.instance = instance, .surface = surface, .useValidationLayers = useValidationLayers});
+    swapChain = std::make_shared<SwapChain>();
+    swapChain->init({.device = device});
 }
 
 void Platform::destroy() {
-    device.destroy();
+    swapChain->destroy();
+    device->destroy();
     vkDestroySurfaceKHR(instance, surface, nullptr);
     if (useValidationLayers) {
         destroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);

@@ -9,6 +9,7 @@
 #include "common.hpp"
 #include "window.hpp"
 #include "device.hpp"
+#include "swapchain.hpp"
 
 /* TODO: Required extensions in the platform arguments */
 struct PlatformArgs {
@@ -34,7 +35,8 @@ class Platform {
 
         /* Internal */
         VkInstance instance;
-        Device device;
+        std::shared_ptr<Device> device;
+        std::shared_ptr<SwapChain> swapChain;
         VkDebugUtilsMessengerEXT debugMessenger;
         VkSurfaceKHR surface;
 };
