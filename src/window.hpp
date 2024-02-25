@@ -12,12 +12,15 @@ struct WindowArgs {
 class Window {
     public:
         Window(const WindowArgs &args);
+        void init();
+        void destroy();
         bool shouldClose();
         void pollEvents();
-        ~Window();
+        VkSurfaceKHR createSurface(VkInstance instance);
     private:
         unsigned width;
         unsigned height;
         std::string name;
         GLFWwindow *window;
+        VkSurfaceKHR surface;
 };

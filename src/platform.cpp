@@ -35,14 +35,19 @@ static void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT&
     createInfo.pfnUserCallback = debugCallback;
 }
 
-Platform::Platform(const PlatformArgs &args):
-    useValidationLayers(args.useValidationLayers),
-    name(args.name) {
+void Platform::init(const PlatformArgs &args) {
+    useValidationLayers = args.useValidationLayers;
+    name = args.name;
+    window = args.window;
     createInstance();
+    surface = window->createSurface(instance);
     setupDebugMessenger();
+    device.init({.instance = instance, .surface = surface, .useValidationLayers = useValidationLayers});
 }
 
-Platform::~Platform() {
+void Platform::destroy() {
+    device.destroy();
+    vkDestroySurfaceKHR(instance, surface, nullptr);
     if (useValidationLayers) {
         destroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
     }

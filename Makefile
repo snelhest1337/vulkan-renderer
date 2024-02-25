@@ -4,7 +4,7 @@ LIBS = tinyobj stb_image
 INCS = $(addprefix -I$(LIBRARY_DIR)/,$(patsubst %,%,$(LIBS)))
 SRCDIR = src
 OBJDIR = obj
-TARGETS = main app platform window
+TARGETS = main app platform window device
 
 OBJS = $(addprefix $(OBJDIR)/,$(patsubst %,%.o,$(TARGETS)))
 
@@ -24,6 +24,8 @@ $(APP): $(OBJS)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	$(CC) $(CFLAGS) $< -c -o $@ $(LDFLAGS)
+
+$(SRCDIR)/%.cpp: $(SRCDIR)/%.hpp
 
 .PHONY: test clean all $(SUBDIRS)
 

@@ -3,20 +3,24 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <vector>
+#include <functional>
+#include <memory>
 
 #include "common.hpp"
+#include "window.hpp"
+#include "device.hpp"
 
 /* TODO: Required extensions in the platform arguments */
 struct PlatformArgs {
     std::string name;
     bool useValidationLayers;
-
+    std::shared_ptr<Window> window;
 };
 
 class Platform {
     public:
-        Platform(const PlatformArgs &args);
-        ~Platform();
+        void init(const PlatformArgs &args);
+        void destroy();
     private:
         std::vector<const char*> getRequiredExtensions();
         bool checkValidationLayerSupport();
@@ -26,11 +30,11 @@ class Platform {
         /* Holds platform arguments */
         bool useValidationLayers;
         std::string name;
+        std::shared_ptr<Window> window;
 
         /* Internal */
         VkInstance instance;
+        Device device;
         VkDebugUtilsMessengerEXT debugMessenger;
-        const std::vector<const char*> validationLayers = {
-            "VK_LAYER_KHRONOS_validation"
-        };
+        VkSurfaceKHR surface;
 };

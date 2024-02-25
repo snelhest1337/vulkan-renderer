@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 
 #include "window.hpp"
 #include "platform.hpp"
@@ -8,14 +9,11 @@ class VulkanApp {
     public:
         VulkanApp(std::string name);
         void run();
+        void teardown();
     private:
         void mainLoop();
-        /* Responsible for setting up a suitable VkInstance */
         std::string name;
-
-        /* NOTE! Order is important! We rely on destructors for cleanup */
-
+        std::shared_ptr<Window> window;
         Platform platform;
-        /* Wraps a glfwWindow */
-        Window window;
+        // Renderer renderer;
 };
