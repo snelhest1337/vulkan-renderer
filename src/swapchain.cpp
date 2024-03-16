@@ -122,3 +122,7 @@ VkImage SwapChain::getNextImage(VkSemaphore semaphore, uint32_t &swapchainImageI
     vkc(vkAcquireNextImageKHR(device->get(), swapChain, SECOND, semaphore, nullptr, &swapchainImageIndex));
     return swapChainImages[swapchainImageIndex];
 }
+
+VkExtent2D SwapChain::getExtent() {
+    return swapChainExtent;
+}

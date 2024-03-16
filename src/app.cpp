@@ -42,6 +42,40 @@ void VulkanApp::init() {
     mainDeletionQueue.push_function([&]() {
         vmaDestroyAllocator(allocator);
     });
+
+    /* Should get its own function */
+    int width;
+    int height;
+    window->getSize(width, height);
+    VkExtent3D drawImageExtent = {
+        width,
+        height,
+        1
+    };
+
+    drawImage.imageFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+    drawImage.imageExtent = drawImageExtent;
+
+
+    VkImageUsageFlags drawImageUsages{};
+    drawImageUsages |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+    drawImageUsages |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+    drawImageUsages |= VK_IMAGE_USAGE_STORAGE_BIT;
+    drawImageUsages |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+
+    auto rimgInfo = vkinit::imageCreateInfo(drawImage.imageFormat, drawImageUsages, drawImageExtent);
+    VmaAllocationCreateInfo rimgAllocinfo = {};
+    rimgAllocinfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+    rimgAllocinfo.requiredFlags = VkMemoryPropertyFlags(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    vmaCreateImage(allocator, &rimgInfo, &rimgAllocinfo, &drawImage.image, &drawImage.allocation, nullptr);
+
+    auto rviewInfo = vkinit::imageViewCreateInfo(drawImage.imageFormat, drawImage.image, VK_IMAGE_ASPECT_COLOR_BIT);
+    vkc(vkCreateImageView(platform.device->get(), &rviewInfo, nullptr, &drawImage.imageView));
+
+    mainDeletionQueue.push_function([&]() {
+        vkDestroyImageView(platform.device->get(), drawImage.imageView, nullptr);
+        vmaDestroyImage(allocator, drawImage.image, drawImage.allocation);
+    });
 }
 
 void VulkanApp::initFrameData() {
@@ -62,6 +96,15 @@ void VulkanApp::teardown() {
     window->destroy();
 }
 
+void VulkanApp::drawBackground(VkCommandBuffer cmd) {
+    VkClearColorValue clearValue;
+    float flash = abs(sin(frameNumber / 120.f));
+    clearValue = { { 0.0f, 0.0f, flash, 1.0f } };
+    VkImageSubresourceRange clearRange = vkinit::imageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT);
+
+    vkCmdClearColorImage(cmd, drawImage.image, VK_IMAGE_LAYOUT_GENERAL, &clearValue, 1, &clearRange);
+}
+
 void VulkanApp::draw() {
     auto frame = getCurrentFrame();
     auto swapchain = platform.swapChain->get();
@@ -74,18 +117,20 @@ void VulkanApp::draw() {
     auto cmd = frame.mainCommandBuffer;
     vkc(vkResetCommandBuffer(cmd, 0));
     auto cmdBeginInfo = vkinit::commandBufferBeginInfo(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+
+    drawExtent.width = drawImage.imageExtent.width;
+    drawExtent.height = drawImage.imageExtent.height;
+
     vkc(vkBeginCommandBuffer(cmd, &cmdBeginInfo));
 
-    vkutil::transitionImage(cmd, swapchainImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
-    VkClearColorValue clearValue;
-    float flash = abs(sin(frameNumber / 120.f));
-    clearValue = { {0.0f, 0.0f, flash, 1.0f} };
-    auto clearRange = vkinit::imageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT);
+    vkutil::transitionImage(cmd, drawImage.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
 
-    vkCmdClearColorImage(cmd, swapchainImage, VK_IMAGE_LAYOUT_GENERAL, &clearValue, 1, &clearRange);
+    drawBackground(cmd);
+    vkutil::transitionImage(cmd, drawImage.image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+    vkutil::transitionImage(cmd, swapchainImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
-    vkutil::transitionImage(cmd, swapchainImage, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
-
+    vkutil::copyImageToImage(cmd, drawImage.image, swapchainImage, drawExtent, platform.swapChain->getExtent());
+    vkutil::transitionImage(cmd, swapchainImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
     vkc(vkEndCommandBuffer(cmd));
 
     auto cmdInfo = vkinit::commandBufferSubmitInfo(cmd);

@@ -20,6 +20,7 @@ class SwapChain {
         void destroy();
         VkSwapchainKHR get();
         VkImage getNextImage(VkSemaphore semaphore, uint32_t &swapchainImageIndex);
+        VkExtent2D getExtent();
     private:
         void createSwapChain();
         void createImageViews();

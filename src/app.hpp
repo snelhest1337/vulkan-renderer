@@ -7,6 +7,7 @@
 #include "platform.hpp"
 #include "framedata.hpp"
 #include "deletionqueue.hpp"
+#include "images.hpp"
 
 constexpr unsigned int FRAME_OVERLAP = 2;
 
@@ -25,6 +26,7 @@ class VulkanApp {
         void mainLoop();
         void initFrameData();
         void draw();
+        void drawBackground(VkCommandBuffer cmd);
         std::string name;
         std::vector<FrameData> frames;
         std::shared_ptr<Window> window;
@@ -33,4 +35,6 @@ class VulkanApp {
         DeletionQueue mainDeletionQueue;
         /* Would be fun to make my own sometime */
         VmaAllocator allocator;
+        AllocatedImage drawImage;
+        VkExtent2D drawExtent;
 };

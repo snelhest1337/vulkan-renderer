@@ -176,10 +176,18 @@ void Device::createLogicalDevice() {
     }
 
     /* TODO: Query this in physical device */
-    VkPhysicalDeviceSynchronization2Features sync2{};
-    sync2.pNext = nullptr;
-    sync2.synchronization2 = true;
-    sync2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES;
+    VkPhysicalDeviceVulkan13Features features13{};
+    features13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+    features13.pNext = nullptr;
+    features13.dynamicRendering = true;
+    features13.synchronization2 = true;
+
+    /* TODO: Query this in physical device */
+    VkPhysicalDeviceVulkan12Features features12{};
+    features12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+    features12.pNext = &features13;
+    features12.bufferDeviceAddress = true;
+    features12.descriptorIndexing = true;
 
     VkPhysicalDeviceFeatures deviceFeatures{};
     deviceFeatures.samplerAnisotropy = VK_TRUE;
@@ -188,7 +196,7 @@ void Device::createLogicalDevice() {
     createInfo.pQueueCreateInfos = queueCreateInfos.data();
     createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
     createInfo.pEnabledFeatures = &deviceFeatures;
-    createInfo.pNext = &sync2;
+    createInfo.pNext = &features12;
 
     createInfo.enabledExtensionCount = 1;
     createInfo.ppEnabledExtensionNames = deviceExtensions.data();
