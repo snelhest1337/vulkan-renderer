@@ -44,7 +44,8 @@ class Device {
         VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
         /* Will be needed by allocator */
         // uint32_t getMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
-
+        uint32_t getGraphicsFamilyIndex();
+        uint32_t getPresentFamilyIndex();
     private:
         QueueFamilyIndices getQueueFamilyIndices(VkPhysicalDevice physicalDevice);
         void createLogicalDevice();

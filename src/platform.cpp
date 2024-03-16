@@ -66,10 +66,10 @@ void Platform::createInstance() {
     VkApplicationInfo appInfo{};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     appInfo.pApplicationName = name.c_str();
-    appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+    appInfo.applicationVersion = VK_MAKE_VERSION(1, 3, 0);
     appInfo.pEngineName = "No Engine";
-    appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.apiVersion = VK_API_VERSION_1_0;
+    appInfo.engineVersion = VK_MAKE_VERSION(1, 3, 0);
+    appInfo.apiVersion = VK_API_VERSION_1_3;
 
     VkInstanceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -87,7 +87,6 @@ void Platform::createInstance() {
         createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*) &debugCreateInfo;
     } else {
         createInfo.enabledLayerCount = 0;
-
         createInfo.pNext = nullptr;
     }
 
@@ -142,4 +141,19 @@ bool Platform::checkValidationLayerSupport() {
     }
 
     return true;
+}
+
+uint32_t Platform::getQueueFamilyIndex(QueueFamily family) {
+    switch (family) {
+        case QueueFamily::GRAPHICS:
+            return device->getGraphicsFamilyIndex();
+        case QueueFamily::PRESENT:
+            return device->getPresentFamilyIndex();
+        default:
+            throw std::runtime_error("Unknown queue family!");
+    }
+}
+
+VkDevice Platform::getDevice() {
+    return device->get();
 }

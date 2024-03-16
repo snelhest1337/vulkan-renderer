@@ -18,10 +18,18 @@ struct PlatformArgs {
     std::shared_ptr<Window> window;
 };
 
+/* TODO: smarter queue management */
+enum class QueueFamily {
+    GRAPHICS,
+    PRESENT,
+};
+
 class Platform {
     public:
         void init(const PlatformArgs &args);
         void destroy();
+        uint32_t getQueueFamilyIndex(QueueFamily family);
+        VkDevice getDevice();
     private:
         std::vector<const char*> getRequiredExtensions();
         bool checkValidationLayerSupport();

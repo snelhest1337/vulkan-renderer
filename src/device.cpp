@@ -194,3 +194,11 @@ void Device::createLogicalDevice() {
     vkGetDeviceQueue(device, qIndices.graphicsFamily.value(), 0, &graphicsQueue);
     vkGetDeviceQueue(device, qIndices.presentFamily.value(), 0, &presentQueue);
 }
+
+uint32_t Device::getGraphicsFamilyIndex() {
+    return qIndices.graphicsFamily.value();
+}
+
+uint32_t Device::getPresentFamilyIndex() {
+    return qIndices.presentFamily.value();
+}
