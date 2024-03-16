@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "app.hpp"
+#include "initializers.hpp"
 
 #define WIDTH 1280
 #define HEIGHT 720
@@ -19,21 +20,23 @@ VulkanApp::VulkanApp(std::string name):
 }
 
 void VulkanApp::initCommands() {
-    VkCommandPoolCreateInfo commandPoolInfo = {};
-    commandPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-    commandPoolInfo.pNext = nullptr;
-    commandPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-    commandPoolInfo.queueFamilyIndex = platform.getQueueFamilyIndex(QueueFamily::GRAPHICS);
+    auto commandPoolInfo = vkinit::commandPoolCreateInfo(platform.getQueueFamilyIndex(QueueFamily::GRAPHICS));
     for (int i = 0; i < FRAME_OVERLAP; i++) {
         vkc(vkCreateCommandPool(platform.getDevice(),  &commandPoolInfo, nullptr, &frames[i].commandPool));
-        VkCommandBufferAllocateInfo cmdAllocInfo = {};
-        cmdAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        cmdAllocInfo.pNext = nullptr;
-        cmdAllocInfo.commandBufferCount = 1;
-        cmdAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        auto cmdAllocInfo = vkinit::commandBufferAllocInfo();
         vkc(vkAllocateCommandBuffers(platform.getDevice(), &cmdAllocInfo, &frames[i].mainCommandBuffer));
     }
 };
+
+void VulkanApp::initSyncStructures() {
+    auto fenceInfo = vkinit::fenceCreateInfo(VK_FENCE_CREATE_SIGNALED_BIT);
+    auto semaphoreInfo = vkinit::semaphoreCreateInfo(0);
+    for (int i = 0; i < FRAME_OVERLAP; i++) {
+        vkc(vkCreateFence(platform.getDevice(), &fenceInfo, nullptr, &frames[i].renderFence));
+        vkc(vkCreateSemaphore(platform.getDevice(), &semaphoreInfo, nullptr, &frames[i].renderSemaphore));
+        vkc(vkCreateSemaphore(platform.getDevice(), &semaphoreInfo, nullptr, &frames[i].swapchainSemaphore));
+    }
+}
 
 void VulkanApp::teardown() {
     vkDeviceWaitIdle(platform.getDevice());

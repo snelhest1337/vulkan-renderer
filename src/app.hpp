@@ -7,6 +7,9 @@
 struct FrameData {
     VkCommandPool commandPool;
     VkCommandBuffer mainCommandBuffer;
+    VkSemaphore swapchainSemaphore;
+    VkSemaphore renderSemaphore;
+    VkFence renderFence;
 };
 
 constexpr unsigned int FRAME_OVERLAP = 2;
@@ -21,6 +24,7 @@ class VulkanApp {
     private:
         void mainLoop();
         void initCommands();
+        void initSyncStructures();
         std::string name;
         std::shared_ptr<Window> window;
         Platform platform;
