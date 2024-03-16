@@ -32,6 +32,7 @@ class Platform {
         uint32_t getQueueFamilyIndex(QueueFamily family);
         std::shared_ptr<Device> device;
         std::shared_ptr<SwapChain> swapChain;
+        VkInstance instance;
     private:
         std::vector<const char*> getRequiredExtensions();
         bool checkValidationLayerSupport();
@@ -44,7 +45,6 @@ class Platform {
         std::shared_ptr<Window> window;
 
         /* Internal */
-        VkInstance instance;
         VkDebugUtilsMessengerEXT debugMessenger;
         VkSurfaceKHR surface;
 };

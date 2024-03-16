@@ -1,5 +1,7 @@
 #include <iostream>
 #include <math.h>
+#define VMA_IMPLEMENTATION
+#include <vk_mem_alloc.h>
 
 #include "app.hpp"
 #include "initializers.hpp"
@@ -31,6 +33,15 @@ void VulkanApp::init() {
     window->init();
     platform.init({.name = name, .useValidationLayers = true, .window = window});
     initFrameData();
+    VmaAllocatorCreateInfo allocatorInfo = {};
+    allocatorInfo.physicalDevice = platform.device->getPhysicalDevice();
+    allocatorInfo.device = platform.device->get();
+    allocatorInfo.instance = platform.instance;
+    allocatorInfo.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
+    vmaCreateAllocator(&allocatorInfo, &allocator);
+    mainDeletionQueue.push_function([&]() {
+        vmaDestroyAllocator(allocator);
+    });
 }
 
 void VulkanApp::initFrameData() {
@@ -43,6 +54,7 @@ void VulkanApp::initFrameData() {
 
 void VulkanApp::teardown() {
     vkDeviceWaitIdle(platform.device->get());
+    mainDeletionQueue.flush();
     for (int i = 0; i < FRAME_OVERLAP; i++) {
         frames[i].destroy(platform.device);
     }
@@ -97,6 +109,8 @@ void VulkanApp::draw() {
     presentInfo.pImageIndices = &swapchainIndex;
 
     vkc(vkQueuePresentKHR(platform.device->getPresentQueue(), &presentInfo));
+    vkc(vkWaitForFences(platform.device->get(), 1, &frame.renderFence, true, SECOND));
+    frame.deletionQueue.flush();
     frameNumber++;
 }
 

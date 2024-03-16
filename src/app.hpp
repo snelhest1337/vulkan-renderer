@@ -1,9 +1,12 @@
 #pragma once
 #include <memory>
 
+#include <vk_mem_alloc.h>
+
 #include "window.hpp"
 #include "platform.hpp"
 #include "framedata.hpp"
+#include "deletionqueue.hpp"
 
 constexpr unsigned int FRAME_OVERLAP = 2;
 
@@ -27,4 +30,7 @@ class VulkanApp {
         std::shared_ptr<Window> window;
         Platform platform;
         unsigned int frameNumber;
+        DeletionQueue mainDeletionQueue;
+        /* Would be fun to make my own sometime */
+        VmaAllocator allocator;
 };

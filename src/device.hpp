@@ -48,6 +48,7 @@ class Device {
         uint32_t getPresentFamilyIndex();
         VkQueue getGraphicsQueue();
         VkQueue getPresentQueue();
+        VkPhysicalDevice getPhysicalDevice();
     private:
         QueueFamilyIndices getQueueFamilyIndices(VkPhysicalDevice physicalDevice);
         void createLogicalDevice();

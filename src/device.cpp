@@ -218,3 +218,7 @@ VkQueue Device::getGraphicsQueue() {
 VkQueue Device::getPresentQueue() {
     return presentQueue;
 }
+
+VkPhysicalDevice Device::getPhysicalDevice() {
+    return physicalDevice;
+}

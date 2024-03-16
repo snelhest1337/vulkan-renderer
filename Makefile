@@ -1,6 +1,6 @@
 LIBRARY_DIR = /home/snelhest/libraries
 CC = g++-13
-LIBS = tinyobj stb_image
+LIBS = tinyobj stb_image vulkan-memory-allocator/VulkanMemoryAllocator/include
 INCS = $(addprefix -I$(LIBRARY_DIR)/,$(patsubst %,%,$(LIBS)))
 SRCDIR = src
 OBJDIR = obj
