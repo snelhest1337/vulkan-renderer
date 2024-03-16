@@ -10,5 +10,5 @@ all: $(SHADERS).frag.spv $(SHADERS).vert.spv
 
 .PHONY: clean all
 
-clean: 
+clean:
 	rm *.spv

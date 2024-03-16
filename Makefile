@@ -4,7 +4,7 @@ LIBS = tinyobj stb_image
 INCS = $(addprefix -I$(LIBRARY_DIR)/,$(patsubst %,%,$(LIBS)))
 SRCDIR = src
 OBJDIR = obj
-TARGETS = main app platform window device swapchain initializers
+TARGETS = main app platform window device swapchain initializers framedata deletionqueue images
 
 OBJS = $(addprefix $(OBJDIR)/,$(patsubst %,%.o,$(TARGETS)))
 
