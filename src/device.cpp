@@ -6,7 +6,7 @@
 #include "device.hpp"
 
 Device::Device() {
-
+    std::cout << "created device " << std::endl;
 }
 
 static bool checkDeviceExtensionSupport(VkPhysicalDevice device) {
@@ -78,6 +78,7 @@ bool Device::isDeviceSuitable(VkPhysicalDevice device) {
     VkPhysicalDeviceFeatures deviceFeatures;
     vkGetPhysicalDeviceProperties(device, &deviceProperties);
     vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+    /* TODO: query synchronizaiton2 support */
 
     bool extensionsSupported = checkDeviceExtensionSupport(device);
     bool swapChainAdequate = false;
@@ -174,6 +175,12 @@ void Device::createLogicalDevice() {
         queueCreateInfos.push_back(queueCreateInfo);
     }
 
+    /* TODO: Query this in physical device */
+    VkPhysicalDeviceSynchronization2Features sync2{};
+    sync2.pNext = nullptr;
+    sync2.synchronization2 = true;
+    sync2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES;
+
     VkPhysicalDeviceFeatures deviceFeatures{};
     deviceFeatures.samplerAnisotropy = VK_TRUE;
     VkDeviceCreateInfo createInfo{};
@@ -181,6 +188,7 @@ void Device::createLogicalDevice() {
     createInfo.pQueueCreateInfos = queueCreateInfos.data();
     createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
     createInfo.pEnabledFeatures = &deviceFeatures;
+    createInfo.pNext = &sync2;
 
     createInfo.enabledExtensionCount = 1;
     createInfo.ppEnabledExtensionNames = deviceExtensions.data();
@@ -201,4 +209,12 @@ uint32_t Device::getGraphicsFamilyIndex() {
 
 uint32_t Device::getPresentFamilyIndex() {
     return qIndices.presentFamily.value();
+}
+
+VkQueue Device::getGraphicsQueue() {
+    return graphicsQueue;
+}
+
+VkQueue Device::getPresentQueue() {
+    return presentQueue;
 }

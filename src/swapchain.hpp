@@ -18,6 +18,8 @@ class SwapChain {
     public:
         void init(const SwapChainArgs &args);
         void destroy();
+        VkSwapchainKHR get();
+        VkImage getNextImage(VkSemaphore semaphore, uint32_t &swapchainImageIndex);
     private:
         void createSwapChain();
         void createImageViews();

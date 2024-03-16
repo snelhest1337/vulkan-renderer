@@ -8,7 +8,7 @@
 
 VkSurfaceFormatKHR SwapChain::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats) {
     for (const auto& availableFormat : availableFormats) {
-        if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+        if (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
             return availableFormat;
         }
     }
@@ -17,7 +17,7 @@ VkSurfaceFormatKHR SwapChain::chooseSwapSurfaceFormat(const std::vector<VkSurfac
 
 VkPresentModeKHR SwapChain::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) {
     for (const auto& availablePresentMode : availablePresentModes) {
-        if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
+        if (availablePresentMode == VK_PRESENT_MODE_FIFO_KHR) {
             return availablePresentMode;
         }
     }
@@ -64,7 +64,7 @@ void SwapChain::createSwapChain() {
         createInfo.imageColorSpace = surfaceFormat.colorSpace;
         createInfo.imageExtent = extent;
         createInfo.imageArrayLayers = 1;
-        createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+        createInfo.imageUsage = VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
         QueueFamilyIndices indices = device->getQFIndices();
         uint32_t queueFamilyIndices[] = {indices.graphicsFamily.value(), indices.presentFamily.value()};
@@ -94,9 +94,10 @@ void SwapChain::createSwapChain() {
 
 void SwapChain::createImageViews() {
     swapChainImageViews.resize(swapChainImages.size());
-    for (size_t i = 0; i < swapChainImages.size(); i++) {
-        swapChainImageViews[i] = device->createImageView(swapChainImages[i], swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
-    }
+    /* TODO: remove */
+    // for (size_t i = 0; i < swapChainImages.size(); i++) {
+    //     swapChainImageViews[i] = device->createImageView(swapChainImages[i], swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+    // }
 }
 
 void SwapChain::init(const SwapChainArgs &args) {
@@ -107,8 +108,17 @@ void SwapChain::init(const SwapChainArgs &args) {
 }
 
 void SwapChain::destroy() {
-    for (auto imageView : swapChainImageViews) {
-        vkDestroyImageView(device->get(), imageView, nullptr);
-    }
+    // for (auto imageView : swapChainImageViews) {
+    //     vkDestroyImageView(device->get(), imageView, nullptr);
+    // }
     vkDestroySwapchainKHR(device->get(), swapChain, nullptr);
+}
+
+VkSwapchainKHR SwapChain::get() {
+    return swapChain;
+}
+
+VkImage SwapChain::getNextImage(VkSemaphore semaphore, uint32_t &swapchainImageIndex) {
+    vkc(vkAcquireNextImageKHR(device->get(), swapChain, SECOND, semaphore, nullptr, &swapchainImageIndex));
+    return swapChainImages[swapchainImageIndex];
 }

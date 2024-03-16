@@ -3,14 +3,7 @@
 
 #include "window.hpp"
 #include "platform.hpp"
-
-struct FrameData {
-    VkCommandPool commandPool;
-    VkCommandBuffer mainCommandBuffer;
-    VkSemaphore swapchainSemaphore;
-    VkSemaphore renderSemaphore;
-    VkFence renderFence;
-};
+#include "framedata.hpp"
 
 constexpr unsigned int FRAME_OVERLAP = 2;
 
@@ -18,16 +11,20 @@ constexpr unsigned int FRAME_OVERLAP = 2;
 class VulkanApp {
     public:
         VulkanApp(std::string name);
+        ~VulkanApp();
+        void init();
         void run();
         void teardown();
-        FrameData& getGurrentFrame() { return frames[frameNumber % FRAME_OVERLAP]; };
+        FrameData& getCurrentFrame() {
+            return frames[frameNumber % FRAME_OVERLAP];
+        };
     private:
         void mainLoop();
-        void initCommands();
-        void initSyncStructures();
+        void initFrameData();
+        void draw();
         std::string name;
+        std::vector<FrameData> frames;
         std::shared_ptr<Window> window;
         Platform platform;
-        FrameData frames[FRAME_OVERLAP];
         unsigned int frameNumber;
 };

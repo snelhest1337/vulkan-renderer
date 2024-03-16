@@ -1,10 +1,14 @@
 #include <iostream>
+#include <math.h>
 
 #include "app.hpp"
 #include "initializers.hpp"
+#include "images.hpp"
+#include "common.hpp"
 
 #define WIDTH 1280
 #define HEIGHT 720
+
 
 VulkanApp::VulkanApp(std::string name):
     name(name),
@@ -15,36 +19,85 @@ VulkanApp::VulkanApp(std::string name):
      * Renderer should only have a reference to a device provided and owned by the platform
      */
 {
-    window->init();
-    platform.init({.name = name, .useValidationLayers = true, .window = window});
+
 }
 
-void VulkanApp::initCommands() {
-    auto commandPoolInfo = vkinit::commandPoolCreateInfo(platform.getQueueFamilyIndex(QueueFamily::GRAPHICS));
-    for (int i = 0; i < FRAME_OVERLAP; i++) {
-        vkc(vkCreateCommandPool(platform.getDevice(),  &commandPoolInfo, nullptr, &frames[i].commandPool));
-        auto cmdAllocInfo = vkinit::commandBufferAllocInfo();
-        vkc(vkAllocateCommandBuffers(platform.getDevice(), &cmdAllocInfo, &frames[i].mainCommandBuffer));
-    }
-};
+VulkanApp::~VulkanApp() {
 
-void VulkanApp::initSyncStructures() {
-    auto fenceInfo = vkinit::fenceCreateInfo(VK_FENCE_CREATE_SIGNALED_BIT);
-    auto semaphoreInfo = vkinit::semaphoreCreateInfo(0);
+}
+
+void VulkanApp::init() {
+    frameNumber = 0;
+    window->init();
+    platform.init({.name = name, .useValidationLayers = true, .window = window});
+    initFrameData();
+}
+
+void VulkanApp::initFrameData() {
     for (int i = 0; i < FRAME_OVERLAP; i++) {
-        vkc(vkCreateFence(platform.getDevice(), &fenceInfo, nullptr, &frames[i].renderFence));
-        vkc(vkCreateSemaphore(platform.getDevice(), &semaphoreInfo, nullptr, &frames[i].renderSemaphore));
-        vkc(vkCreateSemaphore(platform.getDevice(), &semaphoreInfo, nullptr, &frames[i].swapchainSemaphore));
+        FrameData frame;
+        frame.init(platform.device);
+        frames.push_back(frame);
     }
 }
 
 void VulkanApp::teardown() {
-    vkDeviceWaitIdle(platform.getDevice());
+    vkDeviceWaitIdle(platform.device->get());
     for (int i = 0; i < FRAME_OVERLAP; i++) {
-        vkDestroyCommandPool(platform.getDevice(), frames[i].commandPool, nullptr);
+        frames[i].destroy(platform.device);
     }
     platform.destroy();
     window->destroy();
+}
+
+void VulkanApp::draw() {
+    auto frame = getCurrentFrame();
+    auto swapchain = platform.swapChain->get();
+    uint32_t swapchainIndex = 0;
+
+    vkc(vkWaitForFences(platform.device->get(), 1, &frame.renderFence, true, SECOND));
+    vkc(vkResetFences(platform.device->get(), 1, &frame.renderFence));
+    auto swapchainImage = platform.swapChain->getNextImage(frame.swapchainSemaphore, swapchainIndex);
+
+    auto cmd = frame.mainCommandBuffer;
+    vkc(vkResetCommandBuffer(cmd, 0));
+    auto cmdBeginInfo = vkinit::commandBufferBeginInfo(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+    vkc(vkBeginCommandBuffer(cmd, &cmdBeginInfo));
+
+    vkutil::transitionImage(cmd, swapchainImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
+    VkClearColorValue clearValue;
+    float flash = abs(sin(frameNumber / 120.f));
+    clearValue = { {0.0f, 0.0f, flash, 1.0f} };
+    auto clearRange = vkinit::imageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT);
+
+    vkCmdClearColorImage(cmd, swapchainImage, VK_IMAGE_LAYOUT_GENERAL, &clearValue, 1, &clearRange);
+
+    vkutil::transitionImage(cmd, swapchainImage, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+
+    vkc(vkEndCommandBuffer(cmd));
+
+    auto cmdInfo = vkinit::commandBufferSubmitInfo(cmd);
+
+    auto waitInfo = vkinit::semaphoreSubmitInfo(VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT_KHR, frame.swapchainSemaphore);
+    auto signalInfo = vkinit::semaphoreSubmitInfo(VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT, frame.renderSemaphore);
+
+    auto submit = vkinit::submitInfo(&cmdInfo, &signalInfo, &waitInfo);
+
+    vkc(vkQueueSubmit2(platform.device->getGraphicsQueue(), 1, &submit, frame.renderFence));
+
+    VkPresentInfoKHR presentInfo = {};
+    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    presentInfo.pNext = nullptr;
+    presentInfo.pSwapchains = &swapchain;
+    presentInfo.swapchainCount = 1;
+
+    presentInfo.pWaitSemaphores = &frame.renderSemaphore;
+    presentInfo.waitSemaphoreCount = 1;
+
+    presentInfo.pImageIndices = &swapchainIndex;
+
+    vkc(vkQueuePresentKHR(platform.device->getPresentQueue(), &presentInfo));
+    frameNumber++;
 }
 
 void VulkanApp::run() {
@@ -55,6 +108,7 @@ void VulkanApp::mainLoop() {
     while (!window->shouldClose()) {
         /* Just a wrapper for glfwPollEvents for now */
         window->pollEvents();
+        draw();
     }
     teardown();
 }

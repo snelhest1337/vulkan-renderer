@@ -153,7 +153,3 @@ uint32_t Platform::getQueueFamilyIndex(QueueFamily family) {
             throw std::runtime_error("Unknown queue family!");
     }
 }
-
-VkDevice Platform::getDevice() {
-    return device->get();
-}

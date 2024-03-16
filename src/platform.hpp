@@ -28,8 +28,10 @@ class Platform {
     public:
         void init(const PlatformArgs &args);
         void destroy();
+        /* Unused? Move to device. */
         uint32_t getQueueFamilyIndex(QueueFamily family);
-        VkDevice getDevice();
+        std::shared_ptr<Device> device;
+        std::shared_ptr<SwapChain> swapChain;
     private:
         std::vector<const char*> getRequiredExtensions();
         bool checkValidationLayerSupport();
@@ -43,8 +45,6 @@ class Platform {
 
         /* Internal */
         VkInstance instance;
-        std::shared_ptr<Device> device;
-        std::shared_ptr<SwapChain> swapChain;
         VkDebugUtilsMessengerEXT debugMessenger;
         VkSurfaceKHR surface;
 };

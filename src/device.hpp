@@ -46,6 +46,8 @@ class Device {
         // uint32_t getMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
         uint32_t getGraphicsFamilyIndex();
         uint32_t getPresentFamilyIndex();
+        VkQueue getGraphicsQueue();
+        VkQueue getPresentQueue();
     private:
         QueueFamilyIndices getQueueFamilyIndices(VkPhysicalDevice physicalDevice);
         void createLogicalDevice();
