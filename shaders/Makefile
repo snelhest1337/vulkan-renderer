@@ -1,9 +1,10 @@
 # Tries to compile a vertex and fragment shader for each name in shader
 SHADERS = triangle
+COMPUTE_SHADERS = gradient
 COMPILER = glslc
 
 
-all: $(SHADERS).frag.spv $(SHADERS).vert.spv
+all: $(SHADERS).frag.spv $(SHADERS).vert.spv $(COMPUTE_SHADERS).comp.spv
 
 %.spv: %
 	$(COMPILER) $< -o $@

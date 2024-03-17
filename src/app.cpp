@@ -5,6 +5,7 @@
 
 #include "app.hpp"
 #include "initializers.hpp"
+#include "pipeline.hpp"
 #include "images.hpp"
 #include "common.hpp"
 
@@ -33,6 +34,7 @@ void VulkanApp::init() {
     window->init();
     platform.init({.name = name, .useValidationLayers = true, .window = window});
     initFrameData();
+
     VmaAllocatorCreateInfo allocatorInfo = {};
     allocatorInfo.physicalDevice = platform.device->getPhysicalDevice();
     allocatorInfo.device = platform.device->get();
@@ -76,6 +78,8 @@ void VulkanApp::init() {
         vkDestroyImageView(platform.device->get(), drawImage.imageView, nullptr);
         vmaDestroyImage(allocator, drawImage.image, drawImage.allocation);
     });
+    initDescriptors();
+    initPipelines();
 }
 
 void VulkanApp::initFrameData() {
@@ -84,6 +88,81 @@ void VulkanApp::initFrameData() {
         frame.init(platform.device);
         frames.push_back(frame);
     }
+}
+
+void VulkanApp::initDescriptors() {
+    std::vector<DescriptorAllocator::PoolSizeRatio> sizes =
+    {
+        { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1 }
+    };
+    /* Todo: does GPU support 10 sets? Query device */
+    globalDescriptorAllocator.initPool(platform.device->get(), 10, sizes);
+    {
+        DescriptorLayoutBuilder builder;
+        builder.addBinding(0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
+        drawImageDescriptorLayout = builder.build(platform.device->get(), VK_SHADER_STAGE_COMPUTE_BIT);
+    }
+
+    drawImageDescriptors = globalDescriptorAllocator.allocate(platform.device->get(), drawImageDescriptorLayout);
+
+    VkDescriptorImageInfo imgInfo{};
+    imgInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+    imgInfo.imageView = drawImage.imageView;
+
+    VkWriteDescriptorSet drawImageWrite{};
+    drawImageWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    drawImageWrite.pNext = nullptr;
+
+    drawImageWrite.dstBinding = 0;
+    drawImageWrite.dstSet = drawImageDescriptors;
+    drawImageWrite.descriptorCount = 1;
+    drawImageWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+    drawImageWrite.pImageInfo = &imgInfo;
+
+    vkUpdateDescriptorSets(platform.device->get(), 1, &drawImageWrite, 0, nullptr);
+    mainDeletionQueue.push_function([&]() {
+        vkDestroyDescriptorSetLayout(platform.device->get(), drawImageDescriptorLayout, nullptr);
+        globalDescriptorAllocator.destroyPool(platform.device->get());
+    });
+}
+
+void VulkanApp::initPipelines() {
+    initBackgroundPipelines();
+}
+
+void VulkanApp::initBackgroundPipelines() {
+    VkPipelineLayoutCreateInfo computeLayout{};
+    computeLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    computeLayout.pNext = nullptr;
+    computeLayout.pSetLayouts = &drawImageDescriptorLayout;
+    computeLayout.setLayoutCount = 1;
+
+    vkc(vkCreatePipelineLayout(platform.device->get(), &computeLayout, nullptr, &gradientPipelineLayout));
+    VkShaderModule computeDrawShader;
+    if (!vkutil::loadShaderModule("shaders/gradient.comp.spv", platform.device->get(), &computeDrawShader))
+    {
+        throw std::runtime_error("Error when building the compute shader");
+    }
+
+    VkPipelineShaderStageCreateInfo stageinfo{};
+    stageinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    stageinfo.pNext = nullptr;
+    stageinfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+    stageinfo.module = computeDrawShader;
+    stageinfo.pName = "main";
+
+    VkComputePipelineCreateInfo computePipelineCreateInfo{};
+    computePipelineCreateInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+    computePipelineCreateInfo.pNext = nullptr;
+    computePipelineCreateInfo.layout = gradientPipelineLayout;
+    computePipelineCreateInfo.stage = stageinfo;
+
+    vkc(vkCreateComputePipelines(platform.device->get(), VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr, &gradientPipeline));
+    vkDestroyShaderModule(platform.device->get(), computeDrawShader, nullptr);
+    mainDeletionQueue.push_function([&]() {
+        vkDestroyPipelineLayout(platform.device->get(), gradientPipelineLayout, nullptr);
+        vkDestroyPipeline(platform.device->get(), gradientPipeline, nullptr);
+    });
 }
 
 void VulkanApp::teardown() {
@@ -97,12 +176,10 @@ void VulkanApp::teardown() {
 }
 
 void VulkanApp::drawBackground(VkCommandBuffer cmd) {
-    VkClearColorValue clearValue;
-    float flash = abs(sin(frameNumber / 120.f));
-    clearValue = { { 0.0f, 0.0f, flash, 1.0f } };
-    VkImageSubresourceRange clearRange = vkinit::imageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT);
-
-    vkCmdClearColorImage(cmd, drawImage.image, VK_IMAGE_LAYOUT_GENERAL, &clearValue, 1, &clearRange);
+    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, gradientPipeline);
+    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, gradientPipelineLayout, 0, 1, &drawImageDescriptors, 0, nullptr);
+    /* Work group size */
+    vkCmdDispatch(cmd, std::ceil(drawExtent.width / 16.0), std::ceil(drawExtent.height / 16.0), 1);
 }
 
 void VulkanApp::draw() {

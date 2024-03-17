@@ -8,6 +8,7 @@
 #include "framedata.hpp"
 #include "deletionqueue.hpp"
 #include "images.hpp"
+#include "descriptors.hpp"
 
 constexpr unsigned int FRAME_OVERLAP = 2;
 
@@ -22,9 +23,21 @@ class VulkanApp {
         FrameData& getCurrentFrame() {
             return frames[frameNumber % FRAME_OVERLAP];
         };
+        DescriptorAllocator globalDescriptorAllocator;
+        VkDescriptorSet drawImageDescriptors;
+        VkDescriptorSetLayout drawImageDescriptorLayout;
+        /*
+         * Should be something like a hashmap with type -> pipeline lookup
+         * Perhaps its own object for pipeline management.
+         */
+        VkPipeline gradientPipeline;
+        VkPipelineLayout gradientPipelineLayout;
     private:
         void mainLoop();
         void initFrameData();
+        void initDescriptors();
+        void initPipelines();
+        void initBackgroundPipelines();
         void draw();
         void drawBackground(VkCommandBuffer cmd);
         std::string name;

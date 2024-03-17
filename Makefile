@@ -4,7 +4,7 @@ LIBS = tinyobj stb_image vulkan-memory-allocator/VulkanMemoryAllocator/include
 INCS = $(addprefix -I$(LIBRARY_DIR)/,$(patsubst %,%,$(LIBS)))
 SRCDIR = src
 OBJDIR = obj
-TARGETS = main app platform window device swapchain initializers framedata deletionqueue images
+TARGETS = main app platform window device swapchain initializers framedata deletionqueue images descriptors pipeline
 
 OBJS = $(addprefix $(OBJDIR)/,$(patsubst %,%.o,$(TARGETS)))
 
